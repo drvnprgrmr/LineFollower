@@ -8,5 +8,7 @@
     "--background-index",
     "--query-driver=**",
     "--compile-commands-dir=c:\\Users\\Adeba\\Documents\\Projects\\LineFollower\\firmware\\esp\\build"
-  ]
+  ],
+  "idf.flashType": "UART",
+  "idf.portWin": "COM5"
 }
