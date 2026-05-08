@@ -15,3 +15,4 @@ dependencies:
   #   # All dependencies of `main` are public by default.
   #   public: true
   michmich/esp-idf-wifi-provisioner: ^0.4.0
+  espressif/mdns: ^1.11.1

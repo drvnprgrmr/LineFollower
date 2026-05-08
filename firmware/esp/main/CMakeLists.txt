@@ -1,2 +1,3 @@
-idf_component_register(SRCS "LineFollower.c"
-                    INCLUDE_DIRS ".")
+idf_component_register(SRCS "http_server.c" "LineFollower.c"
+                    INCLUDE_DIRS "."
+                    EMBED_FILES "index.html")
