@@ -13,7 +13,7 @@
 #define LEDC_CLK_SRC LEDC_USE_XTAL_CLK
 #define CLK_SRC_PRECISION ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED
 
-uint8_t last_channel = LEDC_CHANNEL_0;
+uint8_t last_channel = LEDC_CHANNEL_0; // channel to start from
 ledc_timer_bit_t duty_resolution = 0;
 
 void pwm_init(uint32_t freq)
@@ -41,7 +41,8 @@ void pwm_init(uint32_t freq)
 ledc_channel_t pwm_enable(gpio_num_t pin)
 {
     // pick a new channel up to the maximum each time init is called
-    int channel = last_channel ? (last_channel == LEDC_CHANNEL_MAX - 1) : last_channel++;
+    int channel = (last_channel == LEDC_CHANNEL_MAX - 1) ? last_channel : last_channel++;
+    // ESP_LOGI(TAG, "last_channel: %i", last_channel);
     if (channel == LEDC_CHANNEL_MAX - 1)
     {
         ESP_LOGW(TAG, "last channel used up: %i", channel);
@@ -61,10 +62,10 @@ ledc_channel_t pwm_enable(gpio_num_t pin)
     return channel;
 }
 
-void update_pwm_duty(ledc_channel_t channel, double duty_percentage)
+void pwm_update_duty(ledc_channel_t channel, double duty_percentage)
 {
     uint32_t duty;
-    if (duty_percentage == 1 && duty_resolution > 1)
+    if (duty_percentage == 1.0 && duty_resolution > 1)
     {
         duty = (1 << duty_resolution) - 1; // prevent potential overflow at maximum
     }
@@ -78,7 +79,6 @@ void update_pwm_duty(ledc_channel_t channel, double duty_percentage)
     }
     else
     {
-
         duty = (uint32_t)ceil(duty_percentage * (1 << duty_resolution)); // calculate duty from the percentage
     }
 
