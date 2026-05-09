@@ -8,6 +8,7 @@
 #include <mdns.h>
 
 #include "http_server.h"
+#include "pwm.h"
 
 #define TAG "LineFollower"
 
@@ -16,6 +17,50 @@
 uint8_t led_state = 1;
 uint32_t led_timer = 0;
 uint32_t led_interval = 500 * 1000;
+
+#define ENABLE_PIN GPIO_NUM_0
+
+#define LEFT_MOTOR_A_PIN GPIO_NUM_6
+#define LEFT_MOTOR_B_PIN GPIO_NUM_7
+
+#define RIGHT_MOTOR_A_PIN GPIO_NUM_8
+#define RIGHT_MOTOR_B_PIN GPIO_NUM_9
+
+enum Wheel {
+    LEFT_WHEEL,
+    RIGHT_WHEEL,
+};
+
+
+
+void testMotors() {
+
+}
+
+void enableMotors() {
+    gpio_set_level(ENABLE_PIN, 1);
+}
+
+void moveWheel() {
+
+}
+
+void initMotors() {
+    // configure pins
+    gpio_set_direction(ENABLE_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(ENABLE_PIN, 1);
+    
+    gpio_set_direction(LEFT_MOTOR_A_PIN, GPIO_MODE_OUTPUT);
+    pwm_init(LEFT_MOTOR_A_PIN);
+    gpio_set_direction(LEFT_MOTOR_B_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(LEFT_MOTOR_B_PIN, 0);
+    
+    gpio_set_direction(RIGHT_MOTOR_A_PIN, GPIO_MODE_OUTPUT);
+    pwm_init(RIGHT_MOTOR_A_PIN);
+    gpio_set_direction(RIGHT_MOTOR_A_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(RIGHT_MOTOR_B_PIN, 0);
+    
+}
 
 void start_mdns_service()
 {
@@ -54,6 +99,8 @@ void app_main(void)
     gpio_set_direction(GPIO_MODE_OUTPUT, LED_PIN);
     gpio_set_level(LED_PIN, 0);
 
+
+    initMotors();
     while (true)
     {
         vTaskDelay(1);
