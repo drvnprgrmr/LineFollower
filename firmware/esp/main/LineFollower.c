@@ -18,6 +18,8 @@ uint8_t led_state = 1;
 uint32_t led_timer = 0;
 uint32_t led_interval = 500 * 1000;
 
+#define MOTOR_PWM_FREQUENCY 20 * 1000 // 20kHz
+
 #define ENABLE_PIN GPIO_NUM_0
 
 #define LEFT_MOTOR_A_PIN GPIO_NUM_6
@@ -26,40 +28,53 @@ uint32_t led_interval = 500 * 1000;
 #define RIGHT_MOTOR_A_PIN GPIO_NUM_8
 #define RIGHT_MOTOR_B_PIN GPIO_NUM_9
 
-enum Wheel {
+typedef enum Wheel
+{
     LEFT_WHEEL,
     RIGHT_WHEEL,
-};
+} Wheel;
 
-
-
-void testMotors() {
-
-}
-
-void enableMotors() {
+void enableMotors()
+{
     gpio_set_level(ENABLE_PIN, 1);
 }
 
-void moveWheel() {
-
+void disableMotors()
+{
+    gpio_set_level(ENABLE_PIN, 1);
 }
 
-void initMotors() {
+void updateWheel(Wheel wheel, double speed)
+{
+}
+
+// todo: gradually increase and decrese left and right motor speeds
+void testMotors()
+{
+    uint32_t updateInterval = 100 * 1000;
+
+    for (double i = 0.0; i <= 1.0; i += 0.1)
+    {
+    }
+}
+
+void initMotors()
+{
+    pwm_init(MOTOR_PWM_FREQUENCY);
+
     // configure pins
     gpio_set_direction(ENABLE_PIN, GPIO_MODE_OUTPUT);
     gpio_set_level(ENABLE_PIN, 1);
-    
+
     gpio_set_direction(LEFT_MOTOR_A_PIN, GPIO_MODE_OUTPUT);
-    pwm_init(LEFT_MOTOR_A_PIN);
+    pwm_enable(LEFT_MOTOR_A_PIN);
     gpio_set_direction(LEFT_MOTOR_B_PIN, GPIO_MODE_OUTPUT);
     gpio_set_level(LEFT_MOTOR_B_PIN, 0);
-    
+
     gpio_set_direction(RIGHT_MOTOR_A_PIN, GPIO_MODE_OUTPUT);
-    pwm_init(RIGHT_MOTOR_A_PIN);
+    pwm_enable(RIGHT_MOTOR_A_PIN);
     gpio_set_direction(RIGHT_MOTOR_A_PIN, GPIO_MODE_OUTPUT);
     gpio_set_level(RIGHT_MOTOR_B_PIN, 0);
-    
 }
 
 void start_mdns_service()
@@ -98,7 +113,6 @@ void app_main(void)
 
     gpio_set_direction(GPIO_MODE_OUTPUT, LED_PIN);
     gpio_set_level(LED_PIN, 0);
-
 
     initMotors();
     while (true)
