@@ -10,5 +10,5 @@
     "--compile-commands-dir=c:\\Users\\Adeba\\Documents\\Projects\\LineFollower\\firmware\\esp\\build"
   ],
   "idf.flashType": "UART",
-  "idf.portWin": "COM5"
+  "idf.portWin": "COM3"
 }

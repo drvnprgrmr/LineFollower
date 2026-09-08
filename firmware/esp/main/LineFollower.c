@@ -18,18 +18,35 @@ uint8_t led_state = 1;
 uint32_t led_timer = 0;
 uint32_t led_interval = 500 * 1000;
 
-#define MOTOR_PWM_FREQUENCY 1500 
+#define MOTOR_PWM_FREQUENCY 10000
 
 #define ENABLE_PIN GPIO_NUM_0
 
 #define LEFT_MOTOR_A_PIN GPIO_NUM_8
 #define LEFT_MOTOR_B_PIN GPIO_NUM_7
 
-#define RIGHT_MOTOR_A_PIN GPIO_NUM_5 
-#define RIGHT_MOTOR_B_PIN GPIO_NUM_6 
+#define RIGHT_MOTOR_A_PIN GPIO_NUM_5
+#define RIGHT_MOTOR_B_PIN GPIO_NUM_6
+
+#define LEFT_MAX_SPEED 0.97
+#define LEFT_MIN_SPEED 0.5 //! the wheels just whine and don't move at anything below this
+
+#define RIGHT_MAX_SPEED 1.0
+#define RIGHT_MIN_SPEED 0.5 //! the wheels just whine and don't move at anything below this
 
 uint8_t left_channel = 0;
 uint8_t right_channel = 0;
+
+// sensors
+#define LEFT_SENSOR_PIN GPIO_NUM_4
+#define MID_SENSOR_PIN GPIO_NUM_3
+#define RIGHT_SENSOR_PIN GPIO_NUM_10
+
+// #define LEFT_SENSE_MASK BIT2
+// #define MID_SENSE_MASK BIT1
+// #define RIGHT_SENSE_MASK BIT0
+
+// int sense3 = 0b000;
 
 typedef enum Wheel
 {
@@ -59,12 +76,11 @@ void updateWheel(Wheel wheel, double speed)
     }
 }
 
-
 void testMotors()
 {
     uint16_t update_interval = 1000;
-    double update_step = 0.05;
-    
+    double update_step = 0.1;
+
     for (double i = 0.0; i <= 1.0; i += update_step)
     {
         updateWheel(LEFT_WHEEL, i);
@@ -118,7 +134,71 @@ void start_mdns_service()
     mdns_instance_name_set(TAG);
 }
 
+void init3()
+{
+    gpio_set_direction(LEFT_SENSOR_PIN, GPIO_MODE_INPUT);
+    gpio_set_direction(MID_SENSOR_PIN, GPIO_MODE_INPUT);
+    gpio_set_direction(RIGHT_SENSOR_PIN, GPIO_MODE_INPUT);
+}
+
+void line3()
+{
+    // Logic for following a black line on white surface
+    // where white = 1 and black = 0 per sensor
+    int left_sense = !gpio_get_level(LEFT_SENSOR_PIN);
+    int mid_sense = !gpio_get_level(MID_SENSOR_PIN);
+    int right_sense = !gpio_get_level(RIGHT_SENSOR_PIN);
+
+    ESP_LOGI(TAG, "L: %i, M: %i, R: %i\n", left_sense, mid_sense, right_sense);
+
+    if (left_sense && mid_sense && right_sense) // full stop
+    {
+        updateWheel(LEFT_WHEEL, 0.0);
+        updateWheel(RIGHT_WHEEL, 0.0);
+    }
+
+    else if (
+        (!left_sense && mid_sense && right_sense) ||
+        (!left_sense && !mid_sense && right_sense)) // right turn
+    {
+        updateWheel(LEFT_WHEEL, LEFT_MAX_SPEED);
+        updateWheel(RIGHT_WHEEL, 0.0);
+    }
+
+    else if (
+        (left_sense && mid_sense && !right_sense) ||
+        (left_sense && !mid_sense && !right_sense)) // left turn
+    {
+        updateWheel(LEFT_WHEEL, 0.0);
+        updateWheel(RIGHT_WHEEL, RIGHT_MAX_SPEED);
+    }
+    else // full throttle
+    {
+        updateWheel(LEFT_WHEEL, LEFT_MAX_SPEED);
+        updateWheel(RIGHT_WHEEL, RIGHT_MAX_SPEED);
+    }
+
+    // TODO: Add course correction for 000
+}
+
 void app_main(void)
+{
+    gpio_set_direction(GPIO_MODE_OUTPUT, LED_PIN);
+    gpio_set_level(LED_PIN, 0);
+
+    initMotors();
+    // testMotors();
+    init3();
+
+    while (true)
+    {
+        line3(); // track a line using 3 sensors
+        vTaskDelay(1);
+    }
+}
+
+//
+void _app_main(void)
 {
     // Configure and start the provisioner
     wifi_prov_config_t config = WIFI_PROV_DEFAULT_CONFIG();
