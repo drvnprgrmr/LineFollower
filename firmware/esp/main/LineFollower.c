@@ -20,13 +20,8 @@ uint32_t led_interval = 500 * 1000;
 
 #define MOTOR_PWM_FREQUENCY 10000
 
-#define ENABLE_PIN GPIO_NUM_0
-
-#define LEFT_MOTOR_A_PIN GPIO_NUM_8
-#define LEFT_MOTOR_B_PIN GPIO_NUM_7
-
-#define RIGHT_MOTOR_A_PIN GPIO_NUM_5
-#define RIGHT_MOTOR_B_PIN GPIO_NUM_6
+#define LEFT_MOTOR_PIN GPIO_NUM_4
+#define RIGHT_MOTOR_PIN GPIO_NUM_3
 
 #define LEFT_MAX_SPEED 0.97
 #define LEFT_MIN_SPEED 0.5 //! the wheels just whine and don't move at anything below this
@@ -38,9 +33,16 @@ uint8_t left_channel = 0;
 uint8_t right_channel = 0;
 
 // sensors
-#define LEFT_SENSOR_PIN GPIO_NUM_4
-#define MID_SENSOR_PIN GPIO_NUM_3
-#define RIGHT_SENSOR_PIN GPIO_NUM_10
+const gpio_num_t sensorPins[] = {
+    GPIO_NUM_5,
+    GPIO_NUM_6,
+    GPIO_NUM_7,
+    GPIO_NUM_8,
+    GPIO_NUM_9,
+    GPIO_NUM_10,
+    GPIO_NUM_20,
+    GPIO_NUM_21,
+};
 
 // #define LEFT_SENSE_MASK BIT2
 // #define MID_SENSE_MASK BIT1
@@ -53,16 +55,6 @@ typedef enum Wheel
     LEFT_WHEEL,
     RIGHT_WHEEL,
 } Wheel;
-
-void enableMotors()
-{
-    gpio_set_level(ENABLE_PIN, 1);
-}
-
-void disableMotors()
-{
-    gpio_set_level(ENABLE_PIN, 0);
-}
 
 void updateWheel(Wheel wheel, double speed)
 {
@@ -81,7 +73,7 @@ void testMotors()
     uint16_t update_interval = 1000;
     double update_step = 0.1;
 
-    for (double i = 0.0; i <= 1.0; i += update_step)
+    for (double i = LEFT_MIN_SPEED; i <= LEFT_MAX_SPEED; i += update_step)
     {
         updateWheel(LEFT_WHEEL, i);
         vTaskDelay(update_interval / portTICK_PERIOD_MS);
@@ -90,7 +82,7 @@ void testMotors()
 
     vTaskDelay(3000 / portTICK_PERIOD_MS);
 
-    for (double i = 0.0; i <= 1.0; i += update_step)
+    for (double i = RIGHT_MIN_SPEED; i <= RIGHT_MAX_SPEED; i += update_step)
     {
         updateWheel(RIGHT_WHEEL, i);
         vTaskDelay(update_interval / portTICK_PERIOD_MS);
@@ -103,18 +95,11 @@ void initMotors()
     pwm_init(MOTOR_PWM_FREQUENCY);
 
     // configure pins
-    gpio_set_direction(ENABLE_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(ENABLE_PIN, 1);
+    gpio_set_direction(LEFT_MOTOR_PIN, GPIO_MODE_OUTPUT);
+    left_channel = pwm_enable(LEFT_MOTOR_PIN);
 
-    gpio_set_direction(LEFT_MOTOR_A_PIN, GPIO_MODE_OUTPUT);
-    left_channel = pwm_enable(LEFT_MOTOR_A_PIN);
-    gpio_set_direction(LEFT_MOTOR_B_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(LEFT_MOTOR_B_PIN, 0);
-
-    gpio_set_direction(RIGHT_MOTOR_A_PIN, GPIO_MODE_OUTPUT);
-    right_channel = pwm_enable(RIGHT_MOTOR_A_PIN);
-    gpio_set_direction(RIGHT_MOTOR_B_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(RIGHT_MOTOR_B_PIN, 0);
+    gpio_set_direction(RIGHT_MOTOR_PIN, GPIO_MODE_OUTPUT);
+    right_channel = pwm_enable(RIGHT_MOTOR_PIN);
 }
 
 void start_mdns_service()
@@ -187,12 +172,12 @@ void app_main(void)
     gpio_set_level(LED_PIN, 0);
 
     initMotors();
-    // testMotors();
-    init3();
+    testMotors();
+    // init3();
 
     while (true)
     {
-        line3(); // track a line using 3 sensors
+        // line3(); // track a line using 3 sensors
         vTaskDelay(1);
     }
 }
